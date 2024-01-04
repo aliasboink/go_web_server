@@ -1,0 +1,48 @@
+post http://localhost:8080/api/chirps
+Content-Type: application/json
+
+{
+  "body": "I had something interesting for breakfast"
+}
+
+###
+
+post http://localhost:8080/api/chirps
+Content-Type: application/json
+
+{
+  "body": "I had something interesting for breakfast, kerfuffle",
+  "extra": "Ignore me!"
+}
+
+###
+get http://localhost:8080/api/chirps
+
+###
+get http://localhost:8080/api/chirps/5
+
+###
+
+post http://localhost:8080/api/chirps
+Content-Type: application/json
+
+{
+  "body": "I had something interesting for breakfast! I had something interesting for breakfast! I had something interesting for breakfast! I had something interesting for breakfast! I had something interesting for breakfast! I had something interesting for breakfast! I had something interesting for breakfast!"
+}
+
+###
+
+post http://localhost:8080/api/chirps
+Content-Type: application/json
+
+{
+  "body": "I really need a kerfuffle to go to bed sooner, Fornax !"
+}
+
+### 
+post http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "mloneusk@example.co"
+}

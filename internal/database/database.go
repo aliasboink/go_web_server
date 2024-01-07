@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -14,8 +15,9 @@ type Chirp struct {
 }
 
 type User struct {
-	Id    int    `json:"id"`
-	Email string `json:"email"`
+	Id       int    `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type DB struct {
@@ -67,7 +69,7 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 }
 
 // Nearly identical to CreateChirp
-func (db *DB) CreateUser(email string) (User, error) {
+func (db *DB) CreateUser(email string, password string) (User, error) {
 	dbStructure, err := db.LoadDB()
 	if err != nil {
 		return User{}, err
@@ -79,9 +81,16 @@ func (db *DB) CreateUser(email string) (User, error) {
 		lastUser := dbStructure.Users[len(dbStructure.Users)]
 		newUserId = lastUser.Id + 1
 	}
+	// Can this be done better?
+	for _, user := range dbStructure.Users {
+		if strings.ToLower(user.Email) == strings.ToLower(email) {
+			return User{}, errors.New("Email already exists!")
+		}
+	}
 	newUser := User{
-		Id:    newUserId,
-		Email: email,
+		Id:       newUserId,
+		Email:    email,
+		Password: password,
 	}
 	dbStructure.Users[newUser.Id] = newUser
 	err = db.writeDB(dbStructure)
@@ -123,6 +132,27 @@ func (db *DB) ensureDB() error {
 		return err
 	}
 	return nil
+}
+
+func (db *DB) UpdateUser(id int, newEmail string, newPassword string) (User, error) {
+	dbStructure, err := db.LoadDB()
+	if err != nil {
+		return User{}, err
+	}
+	var modifiedUser User
+	var indexUser int
+	for index, user := range dbStructure.Users {
+		if user.Id == id {
+			modifiedUser = user
+			indexUser = index
+			break
+		}
+	}
+	modifiedUser.Password = newPassword
+	modifiedUser.Email = newEmail
+	dbStructure.Users[indexUser] = modifiedUser
+	db.writeDB(dbStructure)
+	return modifiedUser, nil
 }
 
 // loadDB reads the database file into memory

@@ -44,5 +44,35 @@ post http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "email": "mloneusk@example.co"
+  "email": "mloneusk@example.co",
+  "password": "wompwomp"
+}
+
+### 
+post http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "sefu@example.co",
+  "password": "wompwomp"
+}
+
+### 
+post http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "email": "sefu@example.co",
+  "password": "wompwomp",
+  "expires_in_seconds": 20
+}
+
+### 
+put http://localhost:8080/api/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHkiLCJzdWIiOiIxIiwiZXhwIjoxNzA0NjM2ODcyLCJpYXQiOjE3MDQ2MzY4NTJ9.FUiW-NOEPzyXRL3N_Zd1daJ4XJ-NxvxgPRyGNgMZiZk
+
+{
+  "email": "sefu2@example.co",
+  "password": "wompwomp2"
 }

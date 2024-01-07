@@ -5,15 +5,20 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 )
 
 type apiConfig struct {
 	fileserverHits int
+	jwtSecret      string
 }
 
 func main() {
+	godotenv.Load()
+
 	r := chi.NewRouter()
 	apiRouter := chi.NewRouter()
 	adminRouter := chi.NewRouter()
@@ -29,6 +34,7 @@ func main() {
 
 	apiCfg := apiConfig{
 		fileserverHits: 0,
+		jwtSecret:      os.Getenv("JWT_SECRET"),
 	}
 
 	r.Handle("/app", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
@@ -39,6 +45,8 @@ func main() {
 	apiRouter.Get("/chirps", handlerGetChirps)
 	apiRouter.Get("/chirps/{id}", handlerGetChirpWithId)
 	apiRouter.Post("/users", handlerPostUser)
+	apiRouter.Put("/users", apiCfg.handlerPutUsers)
+	apiRouter.Post("/login", apiCfg.handlerPostLogin)
 	adminRouter.Get("/metrics", apiCfg.handlerMetrics)
 
 	r.Mount("/api", apiRouter)

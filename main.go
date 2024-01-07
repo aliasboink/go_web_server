@@ -47,6 +47,8 @@ func main() {
 	apiRouter.Post("/users", handlerPostUser)
 	apiRouter.Put("/users", apiCfg.handlerPutUsers)
 	apiRouter.Post("/login", apiCfg.handlerPostLogin)
+	apiRouter.Post("/revoke", apiCfg.handlerPostRevoke)
+	apiRouter.Post("/refresh", apiCfg.handlerPostRefresh)
 	adminRouter.Get("/metrics", apiCfg.handlerMetrics)
 
 	r.Mount("/api", apiRouter)

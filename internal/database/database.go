@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Chirp struct {
@@ -26,8 +27,9 @@ type DB struct {
 }
 
 type DBStructure struct {
-	Chirps map[int]Chirp `json:"chirps"`
-	Users  map[int]User  `json:"users"`
+	Chirps map[int]Chirp        `json:"chirps"`
+	Users  map[int]User         `json:"users"`
+	Tokens map[string]time.Time `json:"tokens"`
 }
 
 // NewDB creates a new database connection
@@ -40,6 +42,77 @@ func NewDB(path string) (*DB, error) {
 		return &DB{}, err
 	}
 	return &db, nil
+}
+
+// ensureDB creates a new database file if it doesn't exist
+func (db *DB) ensureDB() error {
+	_, err := os.Stat(db.path)
+	// I don't really like this bit of code frankly
+	if errors.Is(err, os.ErrNotExist) {
+		file, err := os.Create(db.path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		_, err = file.Write([]byte("{}"))
+		if err != nil {
+			return err
+		}
+		return nil
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
+// loadDB reads the database file into memory
+func (db *DB) LoadDB() (DBStructure, error) {
+	db.mux.RLock()
+	defer db.mux.RUnlock()
+	databaseBytes, err := os.ReadFile(db.path)
+	if err != nil {
+		return DBStructure{}, err
+	}
+	if jsonInfo, err := os.Stat(db.path); err != nil {
+		return DBStructure{}, err
+	} else if jsonInfo.Size() <= 2 {
+		return DBStructure{make(map[int]Chirp), make(map[int]User), make(map[string]time.Time)}, nil
+	}
+	var dbStructure DBStructure
+	err = json.Unmarshal(databaseBytes, &dbStructure)
+	if err != nil {
+		log.Printf("Error unmarshalling JSON: %s", err)
+		return DBStructure{}, err
+	}
+	return dbStructure, nil
+}
+
+// writeDB writes the database file to disk
+func (db *DB) writeDB(dbStructure DBStructure) error {
+	db.mux.Lock()
+	defer db.mux.Unlock()
+	dbStructureBytes, err := json.MarshalIndent(dbStructure, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(db.path, dbStructureBytes, 0666)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetChirps returns all chirps in the database
+func (db *DB) GetChirps() ([]Chirp, error) {
+	dbStructure, err := db.LoadDB()
+	if err != nil {
+		return []Chirp{}, err
+	}
+	chirps := make([]Chirp, len(dbStructure.Chirps))
+	for index, chirp := range dbStructure.Chirps {
+		chirps[index-1] = chirp
+	}
+	return chirps, nil
 }
 
 // CreateChirp creates a new chirp and saves it to disk
@@ -100,40 +173,6 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 	return newUser, nil
 }
 
-// GetChirps returns all chirps in the database
-func (db *DB) GetChirps() ([]Chirp, error) {
-	dbStructure, err := db.LoadDB()
-	if err != nil {
-		return []Chirp{}, err
-	}
-	chirps := make([]Chirp, len(dbStructure.Chirps))
-	for index, chirp := range dbStructure.Chirps {
-		chirps[index-1] = chirp
-	}
-	return chirps, nil
-}
-
-// ensureDB creates a new database file if it doesn't exist
-func (db *DB) ensureDB() error {
-	_, err := os.Stat(db.path)
-	// I don't really like this bit of code frankly
-	if errors.Is(err, os.ErrNotExist) {
-		file, err := os.Create(db.path)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-		_, err = file.Write([]byte("{}"))
-		if err != nil {
-			return err
-		}
-		return nil
-	} else if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (db *DB) UpdateUser(id int, newEmail string, newPassword string) (User, error) {
 	dbStructure, err := db.LoadDB()
 	if err != nil {
@@ -148,6 +187,11 @@ func (db *DB) UpdateUser(id int, newEmail string, newPassword string) (User, err
 			break
 		}
 	}
+	for _, user := range dbStructure.Users {
+		if strings.ToLower(user.Email) == strings.ToLower(newEmail) {
+			return User{}, errors.New("Email already exists!")
+		}
+	}
 	modifiedUser.Password = newPassword
 	modifiedUser.Email = newEmail
 	dbStructure.Users[indexUser] = modifiedUser
@@ -155,39 +199,25 @@ func (db *DB) UpdateUser(id int, newEmail string, newPassword string) (User, err
 	return modifiedUser, nil
 }
 
-// loadDB reads the database file into memory
-func (db *DB) LoadDB() (DBStructure, error) {
-	db.mux.RLock()
-	defer db.mux.RUnlock()
-	databaseBytes, err := os.ReadFile(db.path)
+func (db *DB) RevokeToken(token string) error {
+	dbStructure, err := db.LoadDB()
 	if err != nil {
-		return DBStructure{}, err
+		return err
 	}
-	if jsonInfo, err := os.Stat(db.path); err != nil {
-		return DBStructure{}, err
-	} else if jsonInfo.Size() <= 2 {
-		return DBStructure{make(map[int]Chirp), make(map[int]User)}, nil
-	}
-	var dbStructure DBStructure
-	err = json.Unmarshal(databaseBytes, &dbStructure)
-	if err != nil {
-		log.Printf("Error unmarshalling JSON: %s", err)
-		return DBStructure{}, err
-	}
-	return dbStructure, nil
+	dbStructure.Tokens[token] = time.Now()
+	db.writeDB(dbStructure)
+	return nil
 }
 
-// writeDB writes the database file to disk
-func (db *DB) writeDB(dbStructure DBStructure) error {
-	db.mux.Lock()
-	defer db.mux.Unlock()
-	dbStructureBytes, err := json.MarshalIndent(dbStructure, "", "  ")
+// Technically not okay since it will show Unauthorized
+// in case you fail to load the DB.
+func (db *DB) CheckRevocation(token string) error {
+	dbStructure, err := db.LoadDB()
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(db.path, dbStructureBytes, 0666)
-	if err != nil {
-		return err
+	if _, ok := dbStructure.Tokens[token]; ok {
+		return errors.New("Token has been revoked!")
 	}
 	return nil
 }

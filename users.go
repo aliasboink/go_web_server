@@ -23,14 +23,14 @@ func validEmail(email string) bool {
 
 func (cfg *apiConfig) handlerPostLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Email            string `json:"email"`
-		Password         string `json:"password"`
-		ExpiresInSeconds int    `json:"expires_in_seconds"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
+		log.Print(err)
 		respondWithError(w, 500, "Something went wrong!")
 		return
 	}
@@ -48,38 +48,51 @@ func (cfg *apiConfig) handlerPostLogin(w http.ResponseWriter, r *http.Request) {
 		if strings.ToLower(user.Email) == strings.ToLower(params.Email) {
 			err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.Password))
 			if err != nil {
+				log.Print(err)
 				respondWithError(w, 401, "Wrong password!")
 				return
 			}
-			// Create JWT Token
+			// Create JWT Tokens
 			now := time.Now()
-			if params.ExpiresInSeconds == 0 || params.ExpiresInSeconds > 86400 {
-				params.ExpiresInSeconds = 86400
-			}
-			jwtClaims := jwt.RegisteredClaims{
-				Issuer:    "Chirpy",
+			jwtClaimsAccess := jwt.RegisteredClaims{
+				Issuer:    "Chirpy-Access",
 				IssuedAt:  jwt.NewNumericDate(now),
-				ExpiresAt: jwt.NewNumericDate(now.Add(time.Second * time.Duration(params.ExpiresInSeconds))),
+				ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
 				Subject:   fmt.Sprintf("%d", user.Id),
 			}
-
-			jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims)
-			// interface{}, but the string has to be cast to []byte, ok...
+			jwtAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaimsAccess)
 			// https://github.com/dgrijalva/jwt-go/issues/65#issuecomment-98019456
-			jwtString, err := jwtToken.SignedString([]byte(cfg.jwtSecret))
+			jwtStringAccess, err := jwtAccessToken.SignedString([]byte(cfg.jwtSecret))
+			if err != nil {
+				log.Print(err.Error())
+				respondWithError(w, 500, "Something went wrong!")
+				return
+			}
+
+			jwtClaimsRefresh := jwt.RegisteredClaims{
+				Issuer:    "Chirpy-Refresh",
+				IssuedAt:  jwt.NewNumericDate(now),
+				ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour * 1440)),
+				Subject:   fmt.Sprintf("%d", user.Id),
+			}
+			jwtRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaimsRefresh)
+			// https://github.com/dgrijalva/jwt-go/issues/65#issuecomment-98019456
+			jwtStringRefresh, err := jwtRefreshToken.SignedString([]byte(cfg.jwtSecret))
 			if err != nil {
 				log.Print(err.Error())
 				respondWithError(w, 500, "Something went wrong!")
 				return
 			}
 			response := struct {
-				Id    int    `json:"id"`
-				Email string `json:"email"`
-				Token string `json:"token,omitempty"`
+				Id           int    `json:"id"`
+				Email        string `json:"email"`
+				Token        string `json:"token"`
+				RefreshToken string `json:"refresh_token"`
 			}{
-				Id:    user.Id,
-				Email: user.Email,
-				Token: jwtString,
+				Id:           user.Id,
+				Email:        user.Email,
+				Token:        jwtStringAccess,
+				RefreshToken: jwtStringRefresh,
 			}
 			respondWithJSON(w, 200, response)
 			return
@@ -109,6 +122,17 @@ func (cfg *apiConfig) handlerPutUsers(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Print(err.Error())
+		respondWithError(w, 401, "Unauthorized!")
+		return
+	}
+	issuer, err := claims.GetIssuer()
+	if err != nil {
+		log.Print(err.Error())
+		respondWithError(w, 401, "Unauthorized!")
+		return
+	}
+	if issuer == "Chirpy-Refresh" {
+		log.Print("Refresh token used to PUT user.")
 		respondWithError(w, 401, "Unauthorized!")
 		return
 	}

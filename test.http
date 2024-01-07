@@ -63,16 +63,23 @@ Content-Type: application/json
 
 {
   "email": "sefu@example.co",
-  "password": "wompwomp",
-  "expires_in_seconds": 20
+  "password": "wompwomp"
 }
 
 ### 
 put http://localhost:8080/api/users
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHkiLCJzdWIiOiIxIiwiZXhwIjoxNzA0NjM2ODcyLCJpYXQiOjE3MDQ2MzY4NTJ9.FUiW-NOEPzyXRL3N_Zd1daJ4XJ-NxvxgPRyGNgMZiZk
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktUmVmcmVzaCIsInN1YiI6IjEiLCJleHAiOjE3MDk4MjgwODIsImlhdCI6MTcwNDY0NDA4Mn0.1mYadIxU6xoQYk8vQqols8pHK4YA5-SqytEHBh-ZEg0
 
 {
   "email": "sefu2@example.co",
   "password": "wompwomp2"
 }
+
+### 
+post http://localhost:8080/api/revoke
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktUmVmcmVzaCIsInN1YiI6IjEiLCJleHAiOjE3MDk4MzgwNjQsImlhdCI6MTcwNDY1NDA2NH0.VdVfuTbXC4eOY7wT0CJl_pbgd476JSx_WGhXhNwu3fY
+
+### 
+post http://localhost:8080/api/refresh
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktUmVmcmVzaCIsInN1YiI6IjEiLCJleHAiOjE3MDk4MzgwNjQsImlhdCI6MTcwNDY1NDA2NH0.VdVfuTbXC4eOY7wT0CJl_pbgd476JSx_WGhXhNwu3fY

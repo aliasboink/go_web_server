@@ -3,16 +3,21 @@ package database
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Chirp struct {
-	Id   int    `json:"id"`
-	Body string `json:"body"`
+	Id       int    `json:"id"`
+	Body     string `json:"body"`
+	AuthorId int    `json:"author_id"`
 }
 
 type User struct {
@@ -117,7 +122,11 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 
 // CreateChirp creates a new chirp and saves it to disk
 // Assume ID's are in order
-func (db *DB) CreateChirp(body string) (Chirp, error) {
+func (db *DB) CreateChirp(body string, authorId string) (Chirp, error) {
+	authorIdInt, err := strconv.Atoi(authorId)
+	if err != nil {
+		return Chirp{}, err
+	}
 	dbStructure, err := db.LoadDB()
 	if err != nil {
 		return Chirp{}, err
@@ -130,8 +139,9 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 		newChirpId = lastChirp.Id + 1
 	}
 	newChirp := Chirp{
-		Id:   newChirpId,
-		Body: body,
+		Id:       newChirpId,
+		Body:     body,
+		AuthorId: authorIdInt,
 	}
 	dbStructure.Chirps[newChirp.Id] = newChirp
 	err = db.writeDB(dbStructure)
@@ -192,7 +202,12 @@ func (db *DB) UpdateUser(id int, newEmail string, newPassword string) (User, err
 			return User{}, errors.New("Email already exists!")
 		}
 	}
-	modifiedUser.Password = newPassword
+	// A bit lazy which leads to extra computation.
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), 10)
+	if err != nil {
+		return User{}, err
+	}
+	modifiedUser.Password = fmt.Sprintf("%s", hashedPassword)
 	modifiedUser.Email = newEmail
 	dbStructure.Users[indexUser] = modifiedUser
 	db.writeDB(dbStructure)

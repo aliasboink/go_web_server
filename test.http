@@ -22,7 +22,6 @@ get http://localhost:8080/api/chirps
 get http://localhost:8080/api/chirps/5
 
 ###
-
 post http://localhost:8080/api/chirps
 Content-Type: application/json
 
@@ -31,7 +30,6 @@ Content-Type: application/json
 }
 
 ###
-
 post http://localhost:8080/api/chirps
 Content-Type: application/json
 
@@ -69,10 +67,10 @@ Content-Type: application/json
 ### 
 put http://localhost:8080/api/users
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktUmVmcmVzaCIsInN1YiI6IjEiLCJleHAiOjE3MDk4MjgwODIsImlhdCI6MTcwNDY0NDA4Mn0.1mYadIxU6xoQYk8vQqols8pHK4YA5-SqytEHBh-ZEg0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktQWNjZXNzIiwic3ViIjoiMSIsImV4cCI6MTcwNTA2MTQzNywiaWF0IjoxNzA1MDU3ODM3fQ.8SWaEVCUIkj97LefGBwUtstYwdcZiCSeYTio6ERT9Z0
 
 {
-  "email": "sefu2@example.co",
+  "email": "sefu22@example.co",
   "password": "wompwomp2"
 }
 
@@ -82,4 +80,30 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktU
 
 ### 
 post http://localhost:8080/api/refresh
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktUmVmcmVzaCIsInN1YiI6IjEiLCJleHAiOjE3MDk4MzgwNjQsImlhdCI6MTcwNDY1NDA2NH0.VdVfuTbXC4eOY7wT0CJl_pbgd476JSx_WGhXhNwu3fY
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktUmVmcmVzaCIsInN1YiI6IjEiLCJleHAiOjE3MDk4OTIyNjUsImlhdCI6MTcwNDcwODI2NX0.xn-Y5G1YSnbYnAstvTSMJqJqih83TXEauoucMxfYeJM
+
+# Ch. 7 AUTHORIZATION Section 1
+###
+post http://localhost:8080/api/users
+
+{
+  "email": "walt@breakingbad.com",
+  "password": "123456"
+}
+
+###
+post http://localhost:8080/api/login
+
+{
+  "email": "walt@breakingbad.com",
+  "password": "123456"
+}
+
+###
+post http://localhost:8080/api/chirps
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktQWNjZXNzIiwic3ViIjoiMSIsImV4cCI6MTcwNTA2MjU5OCwiaWF0IjoxNzA1MDU4OTk4fQ.4TW_zkjGGEYVan6TKRBhJM2xnyjnbAsL-ft7JGlYW98
+
+{
+  "body": "I really need a kerfuffle to go to bed sooner, Fornax now !"
+}

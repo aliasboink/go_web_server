@@ -80,7 +80,7 @@ func (cfg *apiConfig) handlerPostRefresh(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	response := struct {
-		Token string `token:"json"`
+		Token string `json:"token"`
 	}{
 		Token: jwtStringAccess,
 	}

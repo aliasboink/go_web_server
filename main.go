@@ -41,7 +41,7 @@ func main() {
 	r.Handle("/app/*", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
 	apiRouter.Get("/healthz", handlerReadiness)
 	apiRouter.Get("/reset", apiCfg.handlerReset)
-	apiRouter.Post("/chirps", handlerPostChirp)
+	apiRouter.Post("/chirps", apiCfg.handlerPostChirp)
 	apiRouter.Get("/chirps", handlerGetChirps)
 	apiRouter.Get("/chirps/{id}", handlerGetChirpWithId)
 	apiRouter.Post("/users", handlerPostUser)

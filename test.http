@@ -102,8 +102,12 @@ post http://localhost:8080/api/login
 ###
 post http://localhost:8080/api/chirps
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktQWNjZXNzIiwic3ViIjoiMSIsImV4cCI6MTcwNTA2MjU5OCwiaWF0IjoxNzA1MDU4OTk4fQ.4TW_zkjGGEYVan6TKRBhJM2xnyjnbAsL-ft7JGlYW98
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktQWNjZXNzIiwic3ViIjoiMiIsImV4cCI6MTcwNTMyODI5NSwiaWF0IjoxNzA1MzI0Njk1fQ.tQhVZTcrCZ0fx_OzljHUoIQuoICk799mGV9YpJbafm0
 
 {
   "body": "I really need a kerfuffle to go to bed sooner, Fornax now !"
 }
+
+###
+delete http://localhost:8080/api/chirps/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktQWNjZXNzIiwic3ViIjoiMiIsImV4cCI6MTcwNTMyODI5NSwiaWF0IjoxNzA1MzI0Njk1fQ.tQhVZTcrCZ0fx_OzljHUoIQuoICk799mGV9YpJbafm0

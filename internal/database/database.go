@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -114,10 +115,57 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 		return []Chirp{}, err
 	}
 	chirps := make([]Chirp, len(dbStructure.Chirps))
-	for index, chirp := range dbStructure.Chirps {
-		chirps[index-1] = chirp
+	index := 0
+	for _, chirp := range dbStructure.Chirps {
+		chirps[index] = chirp
+		index++
 	}
+	sort.Slice(chirps, func(i, j int) bool {
+		return chirps[i].Id < chirps[j].Id
+	})
 	return chirps, nil
+}
+
+func (db *DB) DeleteChirp(chirpId string) error {
+	chirpIdInt, err := strconv.Atoi(chirpId)
+	if err != nil {
+		return err
+	}
+	dbStructure, err := db.LoadDB()
+	if err != nil {
+		return err
+	}
+	delete(dbStructure.Chirps, chirpIdInt)
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Add functionality to see if the chirp exists so it doesn't give Forbidden when
+// it just does not exist
+func (db *DB) ChirpBelongsToUser(chirpId string, authorId string) error {
+	chirpIdInt, err := strconv.Atoi(chirpId)
+	if err != nil {
+		return err
+	}
+	authorIdInt, err := strconv.Atoi(authorId)
+	if err != nil {
+		return err
+	}
+	dbStructure, err := db.LoadDB()
+	if err != nil {
+		return err
+	}
+	chirp, ok := dbStructure.Chirps[chirpIdInt]
+	if !ok {
+		return errors.New("Not found!")
+	}
+	if chirp.AuthorId != authorIdInt {
+		return errors.New("Forbidden!")
+	}
+	return nil
 }
 
 // CreateChirp creates a new chirp and saves it to disk
@@ -135,8 +183,16 @@ func (db *DB) CreateChirp(body string, authorId string) (Chirp, error) {
 	if len(dbStructure.Chirps) < 1 {
 		newChirpId = 1
 	} else {
-		lastChirp := dbStructure.Chirps[len(dbStructure.Chirps)]
-		newChirpId = lastChirp.Id + 1
+		chirps := make([]Chirp, len(dbStructure.Chirps))
+		index := 0
+		for _, chirp := range dbStructure.Chirps {
+			chirps[index] = chirp
+			index++
+		}
+		sort.Slice(chirps, func(i, j int) bool {
+			return chirps[i].Id < chirps[j].Id
+		})
+		newChirpId = chirps[len(chirps)-1].Id + 1
 	}
 	newChirp := Chirp{
 		Id:       newChirpId,
@@ -161,8 +217,19 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 	if len(dbStructure.Users) < 1 {
 		newUserId = 1
 	} else {
-		lastUser := dbStructure.Users[len(dbStructure.Users)]
-		newUserId = lastUser.Id + 1
+		// Breaks if you delete a user btw.
+		// lastUser := dbStructure.Users[len(dbStructure.Users)]
+		// newUserId = lastUser.Id + 1
+		users := make([]User, len(dbStructure.Users))
+		index := 0
+		for _, user := range dbStructure.Users {
+			users[index] = user
+			index++
+		}
+		sort.Slice(users, func(i, j int) bool {
+			return users[i].Id < users[j].Id
+		})
+		newUserId = users[len(users)-1].Id + 1
 	}
 	// Can this be done better?
 	for _, user := range dbStructure.Users {

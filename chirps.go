@@ -12,6 +12,63 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+func (cfg *apiConfig) handlerDeleteChirp(w http.ResponseWriter, r *http.Request) {
+	// This could be a function
+	tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	claims := jwt.RegisteredClaims{}
+	jwtToken, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.jwtSecret), nil
+	})
+	if err != nil {
+		log.Print(err.Error())
+		respondWithError(w, 401, "Unauthorized!")
+		return
+	}
+	issuer, err := claims.GetIssuer()
+	if err != nil || issuer != "Chirpy-Access" {
+		respondWithError(w, 401, "Unauthorized!")
+		return
+	}
+	// Up to here
+	chirpUrlId := chi.URLParam(r, "id")
+	userId, err := jwtToken.Claims.GetSubject()
+	if err != nil {
+		log.Print(err.Error())
+		respondWithError(w, 500, "Something went wrong!")
+		return
+	}
+	db, err := database.NewDB("database.json")
+	if err != nil {
+		log.Println(err.Error())
+		respondWithError(w, 500, "Something went wrong with the DB!")
+		return
+	}
+	// I don't necessarily really like handling
+	// the error like this, but it's a way I'm trying out.
+	err = db.ChirpBelongsToUser(chirpUrlId, userId)
+	if err != nil {
+		if err.Error() == "Forbidden!" {
+			log.Print(err.Error())
+			respondWithError(w, 403, err.Error())
+			return
+		} else if err.Error() == "Not found!" {
+			log.Print(err.Error())
+			respondWithError(w, 404, err.Error())
+			return
+		}
+		respondWithError(w, 500, "Something went wrong!")
+		return
+	}
+	err = db.DeleteChirp(chirpUrlId)
+	if err != nil {
+		log.Print(err.Error())
+		respondWithError(w, 500, "Something went wrong with the DB!")
+		return
+	}
+	w.WriteHeader(200)
+	return
+}
+
 func (cfg *apiConfig) handlerPostChirp(w http.ResponseWriter, r *http.Request) {
 	// This could be a function
 	tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")

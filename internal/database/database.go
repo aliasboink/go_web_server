@@ -22,9 +22,10 @@ type Chirp struct {
 }
 
 type User struct {
-	Id       int    `json:"id"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Id          int    `json:"id"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	IsChirpyRed bool   `json:"is_chirpy_red"`
 }
 
 type DB struct {
@@ -238,9 +239,10 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 		}
 	}
 	newUser := User{
-		Id:       newUserId,
-		Email:    email,
-		Password: password,
+		Id:          newUserId,
+		Email:       email,
+		Password:    password,
+		IsChirpyRed: false,
 	}
 	dbStructure.Users[newUser.Id] = newUser
 	err = db.writeDB(dbStructure)
@@ -248,6 +250,29 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 		return User{}, err
 	}
 	return newUser, nil
+}
+
+func (db *DB) UpgradeUser(id int) (User, error) {
+	dbStructure, err := db.LoadDB()
+	if err != nil {
+		return User{}, err
+	}
+	var modifiedUser User
+	var indexUser int
+	for index, user := range dbStructure.Users {
+		if user.Id == id {
+			modifiedUser = user
+			indexUser = index
+			break
+		}
+	}
+	modifiedUser.IsChirpyRed = true
+	dbStructure.Users[indexUser] = modifiedUser
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return User{}, err
+	}
+	return modifiedUser, nil
 }
 
 func (db *DB) UpdateUser(id int, newEmail string, newPassword string) (User, error) {
@@ -277,7 +302,10 @@ func (db *DB) UpdateUser(id int, newEmail string, newPassword string) (User, err
 	modifiedUser.Password = fmt.Sprintf("%s", hashedPassword)
 	modifiedUser.Email = newEmail
 	dbStructure.Users[indexUser] = modifiedUser
-	db.writeDB(dbStructure)
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return User{}, err
+	}
 	return modifiedUser, nil
 }
 
@@ -287,7 +315,10 @@ func (db *DB) RevokeToken(token string) error {
 		return err
 	}
 	dbStructure.Tokens[token] = time.Now()
-	db.writeDB(dbStructure)
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

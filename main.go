@@ -50,6 +50,7 @@ func main() {
 	apiRouter.Post("/login", apiCfg.handlerPostLogin)
 	apiRouter.Post("/revoke", apiCfg.handlerPostRevoke)
 	apiRouter.Post("/refresh", apiCfg.handlerPostRefresh)
+	apiRouter.Post("/polka/webhooks", apiCfg.handlerPostPolkaWebhook)
 	adminRouter.Get("/metrics", apiCfg.handlerMetrics)
 
 	r.Mount("/api", apiRouter)

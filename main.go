@@ -14,6 +14,7 @@ import (
 type apiConfig struct {
 	fileserverHits int
 	jwtSecret      string
+	polkaSecret    string
 }
 
 func main() {
@@ -35,6 +36,7 @@ func main() {
 	apiCfg := apiConfig{
 		fileserverHits: 0,
 		jwtSecret:      os.Getenv("JWT_SECRET"),
+		polkaSecret:    os.Getenv("POLKA_SECRET"),
 	}
 
 	r.Handle("/app", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))

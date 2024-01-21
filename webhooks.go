@@ -4,11 +4,17 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/aliasboink/go_web_server/internal/database"
 )
 
 func (cfg *apiConfig) handlerPostPolkaWebhook(w http.ResponseWriter, r *http.Request) {
+	polkaSecret := strings.TrimPrefix(r.Header.Get("Authorization"), "ApiKey ")
+	if polkaSecret != cfg.polkaSecret {
+		w.WriteHeader(401)
+		return
+	}
 	type parameters struct {
 		Event string `json:"event"`
 		Data  struct {

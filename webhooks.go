@@ -25,7 +25,7 @@ func (cfg *apiConfig) handlerPostPolkaWebhook(w http.ResponseWriter, r *http.Req
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		log.Print(err)
+		log.Print(err.Error())
 		respondWithError(w, 500, "Something went wrong!")
 		return
 	}

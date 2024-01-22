@@ -1,14 +1,11 @@
-post http://localhost:8080/api/chirps
+get http://localhost:8080/api/chirps?author_id=2
 Content-Type: application/json
-
-{
-  "body": "I had something interesting for breakfast"
-}
 
 ###
 
 post http://localhost:8080/api/chirps
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktQWNjZXNzIiwic3ViIjoiMiIsImV4cCI6MTcwNTk1NDMyNiwiaWF0IjoxNzA1OTUwNzI2fQ.SxHGfM-P7CVk3nxGRTk1EkqJJa5Fjrucmd-Vqe_xJdg
 
 {
   "body": "I had something interesting for breakfast, kerfuffle",

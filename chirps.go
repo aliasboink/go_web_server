@@ -132,7 +132,25 @@ func handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 500, "Something went wrong with chirps!")
 		return
 	}
+	authorId := r.URL.Query().Get("author_id")
+	if authorId != "" {
+		authorIdInt, err := strconv.Atoi(authorId)
+		if err != nil {
+			log.Print(err.Error())
+			respondWithError(w, 500, "Something went wrong!")
+			return
+		}
+		var authorIdChirps []database.Chirp
+		for _, chirp := range chirps {
+			if chirp.AuthorId == authorIdInt {
+				authorIdChirps = append(authorIdChirps, chirp)
+			}
+		}
+		respondWithJSON(w, 200, authorIdChirps)
+		return
+	}
 	respondWithJSON(w, 200, chirps)
+	return
 }
 
 func handlerGetChirpWithId(w http.ResponseWriter, r *http.Request) {

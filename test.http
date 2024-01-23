@@ -1,11 +1,11 @@
-get http://localhost:8080/api/chirps?author_id=2
+get http://localhost:8080/api/chirps?author_id=2&sort=desc
 Content-Type: application/json
 
 ###
 
 post http://localhost:8080/api/chirps
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktQWNjZXNzIiwic3ViIjoiMiIsImV4cCI6MTcwNTk1NDMyNiwiaWF0IjoxNzA1OTUwNzI2fQ.SxHGfM-P7CVk3nxGRTk1EkqJJa5Fjrucmd-Vqe_xJdg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJDaGlycHktQWNjZXNzIiwic3ViIjoiMSIsImV4cCI6MTcwNjAwMjQ2MCwiaWF0IjoxNzA1OTk4ODYwfQ.p_Evmi6PwhkBEUivwwe2PGNj0OL32Eu8lu2k093Uhx0
 
 {
   "body": "I had something interesting for breakfast, kerfuffle",

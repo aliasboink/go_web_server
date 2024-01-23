@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -132,6 +133,23 @@ func handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 500, "Something went wrong with chirps!")
 		return
 	}
+	sortUrl := r.URL.Query().Get("sort")
+	if sortUrl == "asc" {
+		sort.Slice(chirps, func(i, j int) bool {
+			return chirps[i].Id < chirps[j].Id
+		})
+	}
+	if sortUrl == "desc" {
+		sort.Slice(chirps, func(i, j int) bool {
+			return chirps[i].Id > chirps[j].Id
+		})
+	}
+	// Removing an element by value from a slice shouldn't be too
+	//common in your program since it is an O(n) operation
+	//and there are better data structures in the language for that.
+	//Therefore, Go does not provide a built-in remove function for
+	//slices. Apparently. Very unfortunate.
+	var filteredChirps []database.Chirp
 	authorId := r.URL.Query().Get("author_id")
 	if authorId != "" {
 		authorIdInt, err := strconv.Atoi(authorId)
@@ -140,13 +158,12 @@ func handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, 500, "Something went wrong!")
 			return
 		}
-		var authorIdChirps []database.Chirp
 		for _, chirp := range chirps {
 			if chirp.AuthorId == authorIdInt {
-				authorIdChirps = append(authorIdChirps, chirp)
+				filteredChirps = append(filteredChirps, chirp)
 			}
 		}
-		respondWithJSON(w, 200, authorIdChirps)
+		respondWithJSON(w, 200, filteredChirps)
 		return
 	}
 	respondWithJSON(w, 200, chirps)
